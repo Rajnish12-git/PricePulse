@@ -2,6 +2,7 @@ import re
 
 from blinkit import get_blinkit_products
 from zepto_network import get_zepto_products
+from instamart import get_instamart_products
 
 
 # =========================================
@@ -15,43 +16,83 @@ def normalize_size(text):
 
     text = text.lower()
 
-    # litres
-    match = re.search(
-        r'(\d+(?:\.\d+)?)\s*(?:l|ltr|litre|liter)\b',
-        text
-    )
+    # -----------------------------------------
+    # MILLILITRES
+    # -----------------------------------------
 
-    if match:
-        return int(float(match.group(1)) * 1000)
-
-    # millilitres
     match = re.search(
         r'(\d+(?:\.\d+)?)\s*ml\b',
         text
     )
 
     if match:
-        return int(float(match.group(1)))
+        return {
+            "amount": float(match.group(1)),
+            "unit": "ml"
+        }
 
-    # kilograms
+    # -----------------------------------------
+    # LITRES
+    # -----------------------------------------
+
     match = re.search(
-        r'(\d+(?:\.\d+)?)\s*kg\b',
+        r'(\d+(?:\.\d+)?)\s*(?:l|ltr|litre|liter)\b',
         text
     )
 
     if match:
-        return int(float(match.group(1)) * 1000)
+        return {
+            "amount": float(match.group(1)) * 1000,
+            "unit": "ml"
+        }
 
-    # grams
+    # -----------------------------------------
+    # GRAMS
+    # -----------------------------------------
+
     match = re.search(
         r'(\d+(?:\.\d+)?)\s*g\b',
         text
     )
 
     if match:
-        return int(float(match.group(1)))
+        return {
+            "amount": float(match.group(1)),
+            "unit": "g"
+        }
+
+    # -----------------------------------------
+    # KILOGRAMS
+    # -----------------------------------------
+
+    match = re.search(
+        r'(\d+(?:\.\d+)?)\s*kg\b',
+        text
+    )
+
+    if match:
+        return {
+            "amount": float(match.group(1)) * 1000,
+            "unit": "g"
+        }
+
+        # -----------------------------------------
+    # PIECES / QUANTITY
+    # -----------------------------------------
+
+    match = re.search(
+        r'(\d+(?:\.\d+)?)\s*(?:pcs|pc|pieces|piece)\b',
+        text
+    )
+
+    if match:
+        return {
+            "amount": float(match.group(1)),
+            "unit": "pcs"
+        }
 
     return None
+
 
 
 # =========================================
@@ -79,7 +120,7 @@ def normalize_name(name):
 
     # Remove size
     name = re.sub(
-        r'\d+(?:\.\d+)?\s*(?:ml|l|ltr|litre|liter|g|kg)\b',
+        r'\d+(?:\.\d+)?\s*(?:ml|l|ltr|litre|liter|g|kg|pcs|pc|pieces|piece)\b',
         " ",
         name
     )
@@ -105,25 +146,61 @@ def normalize_name(name):
 # NAME MATCH
 # =========================================
 
+# =========================================
+# NAME MATCH
+# =========================================
+
 def name_matches(product, query):
 
     query_name = normalize_name(query)
-
     product_name = normalize_name(
         product.get("name", "")
     )
 
-    query_words = query_name.split()
+    if not query_name or not product_name:
+        return False
 
-    product_words = product_name.split()
+    query_words = query_name.split()
+    product_words = set(product_name.split())
+
+    # -----------------------------------------
+    # REMOVE DUPLICATE QUERY WORDS
+    # -----------------------------------------
+
+    query_words = list(set(query_words))
+
+    # -----------------------------------------
+    # EXACT WORD MATCHING
+    # -----------------------------------------
+
+    matched_words = 0
 
     for word in query_words:
 
-        if word not in product_words:
-            return False
+        if word in product_words:
+            matched_words += 1
 
-    return True
+    # -----------------------------------------
+    # CALCULATE MATCH RATIO
+    # -----------------------------------------
 
+    match_ratio = (
+        matched_words / len(query_words)
+    )
+
+    # -----------------------------------------
+    # STRICT MATCH FOR SPECIFIC QUERIES
+    # -----------------------------------------
+
+    if len(query_words) >= 3:
+
+        return match_ratio >= 0.75
+
+    # -----------------------------------------
+    # BROAD QUERY
+    # -----------------------------------------
+
+    return match_ratio >= 0.5
 
 # =========================================
 # FIND NAME MATCHES
@@ -145,6 +222,7 @@ def find_name_matches(products, query):
 # GROUP BY SIZE
 # =========================================
 
+
 def group_by_size(products):
 
     grouped = {}
@@ -158,10 +236,15 @@ def group_by_size(products):
         if size is None:
             continue
 
-        if size not in grouped:
-            grouped[size] = []
+        key = (
+            size["amount"],
+            size["unit"]
+        )
 
-        grouped[size].append(product)
+        if key not in grouped:
+            grouped[key] = []
+
+        grouped[key].append(product)
 
     return grouped
 
@@ -172,16 +255,45 @@ def group_by_size(products):
 
 def format_size(size):
 
-    if size >= 1000:
+    if size is None:
+        return "Unknown"
 
-        litres = size / 1000
+    # group_by_size() returns:
+    # (amount, unit)
+    amount, unit = size
 
-        if litres.is_integer():
-            return f"{int(litres)} L"
+    if unit == "ml":
 
-        return f"{litres:g} L"
+        if amount >= 1000:
+            litres = amount / 1000
 
-    return f"{size} ml"
+            if litres.is_integer():
+                return f"{int(litres)} L"
+
+            return f"{litres:g} L"
+
+        return f"{int(amount)} ml"
+
+    if unit == "g":
+
+        if amount >= 1000:
+            kg = amount / 1000
+
+            if kg.is_integer():
+                return f"{int(kg)} kg"
+
+            return f"{kg:g} kg"
+
+        return f"{int(amount)} g"
+
+    if unit == "pcs":
+
+        if amount.is_integer():
+            return f"{int(amount)} pcs"
+
+        return f"{amount:g} pcs"
+
+    return "Unknown"
 
 
 # =========================================
@@ -194,7 +306,15 @@ def unit_price(product):
         product.get("variant", "")
     )
 
-    if size is None or size == 0:
+    if size is None:
+        return None
+
+    if size["unit"] == "pcs":
+            return None
+
+    amount = size["amount"]
+
+    if amount == 0:
         return None
 
     price = product.get("price")
@@ -203,7 +323,7 @@ def unit_price(product):
         return None
 
     # Price per 100 ml / 100 g
-    return (price / size) * 100
+    return (price / amount) * 100
 
 
 # =========================================
@@ -249,6 +369,15 @@ zepto_products = get_zepto_products(
     query
 )
 
+# =========================================
+# INSTAMART
+# =========================================
+
+print("\nSearching Instamart...")
+
+instamart_products = get_instamart_products(
+    query
+)
 
 # =========================================
 # NAME MATCHING
@@ -261,6 +390,11 @@ blinkit_matches = find_name_matches(
 
 zepto_matches = find_name_matches(
     zepto_products,
+    query
+)
+
+instamart_matches = find_name_matches(
+    instamart_products,
     query
 )
 
@@ -277,6 +411,9 @@ zepto_by_size = group_by_size(
     zepto_matches
 )
 
+instamart_by_size = group_by_size(
+    instamart_matches
+)
 
 # =========================================
 # COMMON SIZES
@@ -286,6 +423,18 @@ common_sizes = sorted(
     set(blinkit_by_size.keys())
     &
     set(zepto_by_size.keys())
+    |
+    (
+        set(blinkit_by_size.keys())
+        &
+        set(instamart_by_size.keys())
+    )
+    |
+    (
+        set(zepto_by_size.keys())
+        &
+        set(instamart_by_size.keys())
+    )
 )
 
 
@@ -297,7 +446,6 @@ print(
     "\n========== EXACT SIZE COMPARISON =========="
 )
 
-
 if not common_sizes:
 
     print(
@@ -308,68 +456,81 @@ else:
 
     for size in common_sizes:
 
-        blinkit_product = min(
-            blinkit_by_size[size],
-            key=lambda x: x["price"]
-        )
+        candidates = []
 
-        zepto_product = min(
-            zepto_by_size[size],
-            key=lambda x: x["price"]
-        )
+        if size in blinkit_by_size:
+
+            product = min(
+                blinkit_by_size[size],
+                key=lambda x: x["price"]
+            )
+
+            candidates.append(
+                ("Blinkit", product)
+            )
+
+        if size in zepto_by_size:
+
+            product = min(
+                zepto_by_size[size],
+                key=lambda x: x["price"]
+            )
+
+            candidates.append(
+                ("Zepto", product)
+            )
+
+        if size in instamart_by_size:
+
+            product = min(
+                instamart_by_size[size],
+                key=lambda x: x["price"]
+            )
+
+            candidates.append(
+                ("Instamart", product)
+            )
 
         print(
             f"\n--- {format_size(size)} ---"
         )
 
-        print("\nBlinkit:")
-        print_product(
-            blinkit_product
-        )
+        # Print products
+        for platform, product in candidates:
 
-        print("\nZepto:")
-        print_product(
-            zepto_product
-        )
+            print(f"\n{platform}:")
+            print_product(product)
 
-        if (
-            blinkit_product["price"]
-            <
-            zepto_product["price"]
-        ):
+        # Find cheapest
+        if len(candidates) >= 2:
+
+            cheapest_platform, cheapest_product = min(
+                candidates,
+                key=lambda x: x[1]["price"]
+            )
+
+            highest_price = max(
+                product["price"]
+                for _, product in candidates
+            )
 
             saving = (
-                zepto_product["price"]
-                -
-                blinkit_product["price"]
+                highest_price
+                - cheapest_product["price"]
             )
 
-            print(
-                f"\n🔥 Blinkit cheaper by ₹{saving:.2f}"
-            )
+            if saving > 0:
 
-        elif (
-            zepto_product["price"]
-            <
-            blinkit_product["price"]
-        ):
+                print(
+                    f"\n🔥 {cheapest_platform} "
+                    f"cheaper by ₹{saving:.2f}"
+                )
 
-            saving = (
-                blinkit_product["price"]
-                -
-                zepto_product["price"]
-            )
+            else:
 
-            print(
-                f"\n🔥 Zepto cheaper by ₹{saving:.2f}"
-            )
-
-        else:
-
-            print(
-                "\n🤝 Same price"
-            )
-
+                print(
+                    "\n🤝 Same price"
+                )
 
 # =========================================
 # UNIT PRICE COMPARISON
@@ -385,6 +546,7 @@ print(
 
 best_blinkit_unit = None
 best_zepto_unit = None
+best_instamart_unit = None
 
 
 for product in blinkit_matches:
@@ -422,6 +584,22 @@ for product in zepto_matches:
             unit
         )
 
+for product in instamart_matches:
+
+    unit = unit_price(product)
+
+    if unit is None:
+        continue
+
+    if (
+        best_instamart_unit is None
+        or unit < best_instamart_unit[1]
+    ):
+
+        best_instamart_unit = (
+            product,
+            unit
+        )
 
 if best_blinkit_unit:
 
@@ -441,8 +619,15 @@ if best_blinkit_unit:
         f"Price   : ₹{product['price']}"
     )
 
+    size_info = normalize_size(product.get("variant", ""))
+
+    if size_info["unit"] == "g":
+        unit_label = "100 g"
+    else:
+        unit_label = "100 ml"
+
     print(
-        f"Unit    : ₹{unit:.2f} per 100 ml/g"
+    f"Unit    : ₹{unit:.2f} per {unit_label}"
     )
 
 
@@ -471,8 +656,15 @@ if best_zepto_unit:
         f"Price   : ₹{product['price']}"
     )
 
+    size_info = normalize_size(product.get("variant", ""))
+
+    if size_info["unit"] == "g":
+        unit_label = "100 g"
+    else:
+        unit_label = "100 ml"
+
     print(
-        f"Unit    : ₹{unit:.2f} per 100 ml/g"
+        f"Unit    : ₹{unit:.2f} per {unit_label}"
     )
 
 
@@ -482,53 +674,107 @@ else:
         "\nZepto: Unit price unavailable"
     )
 
+if best_instamart_unit:
+
+    product, unit = best_instamart_unit
+
+    print("\nInstamart:")
+
+    print(
+        f"Product : {product['name']}"
+    )
+
+    print(
+        f"Variant : {product['variant']}"
+    )
+
+    print(
+        f"Price   : ₹{product['price']}"
+    )
+
+    size_info = normalize_size(
+        product.get("variant", "")
+    )
+
+    if size_info["unit"] == "g":
+        unit_label = "100 g"
+    else:
+        unit_label = "100 ml"
+
+    print(
+        f"Unit    : ₹{unit:.2f} per {unit_label}"
+    )
+
+else:
+
+    print(
+        "\nInstamart: Unit price unavailable"
+    )
 
 # =========================================
 # UNIT PRICE WINNER
 # =========================================
 
-if (
-    best_blinkit_unit
-    and best_zepto_unit
-):
+unit_candidates = []
 
-    blinkit_unit = best_blinkit_unit[1]
-    zepto_unit = best_zepto_unit[1]
+if best_blinkit_unit:
+    unit_candidates.append(
+        ("Blinkit", best_blinkit_unit)
+    )
+
+if best_zepto_unit:
+    unit_candidates.append(
+        ("Zepto", best_zepto_unit)
+    )
+
+if best_instamart_unit:
+    unit_candidates.append(
+        ("Instamart", best_instamart_unit)
+    )
+
+
+if len(unit_candidates) >= 2:
 
     print(
         "\n========== BETTER VALUE =========="
     )
 
-    if blinkit_unit < zepto_unit:
+    cheapest_platform, cheapest_data = min(
+        unit_candidates,
+        key=lambda x: x[1][1]
+    )
 
-        difference = (
-            zepto_unit
-            - blinkit_unit
-        )
+    cheapest_unit = cheapest_data[1]
 
-        print(
-            "🔥 Blinkit has the better unit price"
-        )
+    other_units = [
+        data[1]
+        for platform, data in unit_candidates
+        if platform != cheapest_platform
+    ]
 
-        print(
-            f"Saves ₹{difference:.2f} "
-            f"per 100 ml/g"
-        )
+    highest_unit = max(other_units)
 
-    elif zepto_unit < blinkit_unit:
+    difference = highest_unit - cheapest_unit
 
-        difference = (
-            blinkit_unit
-            - zepto_unit
-        )
+    if difference > 0:
 
         print(
-            "🔥 Zepto has the better unit price"
+            f"🔥 {cheapest_platform} "
+            f"has the better unit price"
         )
 
+        size_info = normalize_size(
+        cheapest_data[0].get("variant", "")
+    )
+
+        if size_info["unit"] == "g":
+            unit_label = "g"
+        else:
+            unit_label = "ml"
+
         print(
-            f"Saves ₹{difference:.2f} "
-            f"per 100 ml/g"
+        f"Saves ₹{difference:.2f} "
+        f"per 100 {unit_label}"
         )
 
     else:
@@ -539,29 +785,45 @@ if (
 
 
 # =========================================
-# PLATFORM-ONLY SIZES
+# PLATFORM AVAILABILITY
 # =========================================
 
-blinkit_only = sorted(
-    set(blinkit_by_size.keys())
-    -
-    set(zepto_by_size.keys())
+print(
+    "\n========== PLATFORM AVAILABILITY =========="
 )
 
-zepto_only = sorted(
-    set(zepto_by_size.keys())
-    -
-    set(blinkit_by_size.keys())
+
+# All sizes available on each platform
+all_blinkit_sizes = set(
+    blinkit_by_size.keys()
 )
 
+all_zepto_sizes = set(
+    zepto_by_size.keys()
+)
+
+all_instamart_sizes = set(
+    instamart_by_size.keys()
+)
+
+
+# =========================================
+# BLINKIT ONLY
+# =========================================
+
+blinkit_only = (
+    all_blinkit_sizes
+    - all_zepto_sizes
+    - all_instamart_sizes
+)
 
 if blinkit_only:
 
     print(
-        "\n========== BLINKIT ONLY =========="
+        "\nBlinkit only:"
     )
 
-    for size in blinkit_only:
+    for size in sorted(blinkit_only):
 
         product = min(
             blinkit_by_size[size],
@@ -574,16 +836,55 @@ if blinkit_only:
         )
 
 
+# =========================================
+# ZEPTO ONLY
+# =========================================
+
+zepto_only = (
+    all_zepto_sizes
+    - all_blinkit_sizes
+    - all_instamart_sizes
+)
+
 if zepto_only:
 
     print(
-        "\n========== ZEPTO ONLY =========="
+        "\nZepto only:"
     )
 
-    for size in zepto_only:
+    for size in sorted(zepto_only):
 
         product = min(
             zepto_by_size[size],
+            key=lambda x: x["price"]
+        )
+
+        print(
+            f"{format_size(size)} → "
+            f"₹{product['price']}"
+        )
+
+
+# =========================================
+# INSTAMART ONLY
+# =========================================
+
+instamart_only = (
+    all_instamart_sizes
+    - all_blinkit_sizes
+    - all_zepto_sizes
+)
+
+if instamart_only:
+
+    print(
+        "\nInstamart only:"
+    )
+
+    for size in sorted(instamart_only):
+
+        product = min(
+            instamart_by_size[size],
             key=lambda x: x["price"]
         )
 
