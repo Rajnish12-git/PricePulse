@@ -1,15 +1,21 @@
 import subprocess
 import json
+import os
+import shutil
+from dotenv import load_dotenv
 
-
+load_dotenv()
 # Your authenticated Instamart address
-ADDRESS_ID = "d6gu6atq11t0vdt6nvb0"
+ADDRESS_ID = os.getenv("INSTAMART_ADDRESS_ID")
 
 
 def get_instamart_products(product_name):
+    swiggy_path = os.getenv("SWIGGY_PATH")
+    if not swiggy_path or not os.path.exists(swiggy_path):
+        swiggy_path = shutil.which("swiggy") or "swiggy"
 
     command = [
-        r"C:\Users\kumar\AppData\Roaming\npm\swiggy.cmd",
+        swiggy_path,
         "instamart",
         "search",
         "--query",
@@ -17,7 +23,7 @@ def get_instamart_products(product_name):
         "--address-id",
         ADDRESS_ID,
         "--json"
-]
+    ]
 
     try:
         result = subprocess.run(
@@ -28,8 +34,10 @@ def get_instamart_products(product_name):
         )
 
         if result.returncode != 0:
-            print("Instamart error:")
-            print(result.stderr)
+            print("Instamart command failed")
+            print("Return code:", result.returncode)
+            print("STDOUT:", result.stdout)
+            print("STDERR:", result.stderr)
             return []
 
         data = json.loads(result.stdout)

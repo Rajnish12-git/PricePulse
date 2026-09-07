@@ -1,6 +1,7 @@
 import json
+import re
 import time
-from urllib.parse import quote_plus
+from urllib.parse import quote_plus, unquote
 
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -129,12 +130,11 @@ def get_blinkit_products(product_name):
             if "/v1/layout/search" not in url:
                 continue
 
-            # Ignore auto-suggest requests
-            if "type_to_search" not in url:
-                continue
+            unquoted_url = unquote(url).lower()
+            query_lower = product_name.lower()
 
-            # Only accept the EXACT search query
-            if f"q={encoded_query.lower()}" not in url.lower():
+            # Ensure URL matches query
+            if query_lower not in unquoted_url and encoded_query.lower() not in url.lower():
                 continue
 
             request_id = message["params"]["requestId"]
@@ -187,21 +187,20 @@ def get_blinkit_products(product_name):
                     )
 
                     if name and price_text:
-
-                        price = float(
-                            price_text
-                            .replace("₹", "")
-                            .replace(",", "")
-                        )
-
-                        products.append(
-                            {
-                                "name": name,
-                                "variant": variant,
-                                "price": price,
-                                "stock": inventory
-                            }
-                        )
+                        try:
+                            clean_price = re.sub(r'[^\d.]', '', str(price_text))
+                            if clean_price:
+                                price = float(clean_price)
+                                products.append(
+                                    {
+                                        "name": name,
+                                        "variant": variant or "",
+                                        "price": price,
+                                        "stock": inventory
+                                    }
+                                )
+                        except ValueError:
+                            pass
 
             except Exception as e:
 

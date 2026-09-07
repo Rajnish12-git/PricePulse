@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PricePulse - Real-time Quick Commerce Price Comparison</title>
+    <meta name="description" content="Compare live grocery prices across Blinkit, Zepto, and Swiggy Instamart instantly. Find the best deals and unit price value.">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header / Navbar -->
+        <header class="navbar">
+            <div class="nav-brand">
+                <div class="logo-icon">⚡</div>
+                <div class="logo-text">
+                    <span class="brand-name">PricePulse</span>
+                    <span class="brand-tag">Quick-Commerce Compare</span>
+                </div>
+            </div>
+            
+            <div class="platform-badges-header">
+                <span class="p-badge blinkit">
+                    <span class="dot"></span> Blinkit
+                </span>
+                <span class="p-badge zepto">
+                    <span class="dot"></span> Zepto
+                </span>
+                <span class="p-badge instamart">
+                    <span class="dot"></span> Instamart
+                </span>
+            </div>
+
+            <div class="api-status" id="apiStatus">
+                <span class="status-indicator live"></span>
+                <span class="status-text">Backend Connected</span>
+            </div>
+        </header>
+
+        <!-- Main Hero Section -->
+        <main class="main-content">
+            <section class="hero-section">
+                <h1 class="hero-title">Compare Live Prices across <span class="gradient-text">Blinkit, Zepto & Instamart</span></h1>
+                <p class="hero-subtitle">Stop overpaying for groceries. Get normalized package & unit price comparisons in real time.</p>
+
+                <!-- Search Form -->
+                <div class="search-box-container">
+                    <form id="searchForm" class="search-form">
+                        <div class="search-input-wrapper">
+                            <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                            </svg>
+                            <input 
+                                type="text" 
+                                id="searchInput" 
+                                class="search-input" 
+                                placeholder="Search products e.g., Amul Milk, Lays Chips, Fortune Oil..." 
+                                autocomplete="off"
+                                required
+                            >
+                            <button type="button" id="clearBtn" class="clear-btn hidden" aria-label="Clear search">✕</button>
+                        </div>
+                        <button type="submit" class="search-btn" id="searchBtn">
+                            <span class="btn-text">Search Deals</span>
+                            <span class="spinner hidden" id="searchSpinner"></span>
+                        </button>
+                    </form>
+
+                    <!-- Popular Quick Searches -->
+                    <div class="quick-tags">
+                        <span class="quick-label">Try searching:</span>
+                        <button class="tag-btn" data-query="Amul Milk">🥛 Amul Milk</button>
+                        <button class="tag-btn" data-query="Lays Chips">🥔 Lays Chips</button>
+                        <button class="tag-btn" data-query="Fortune Oil">🪔 Fortune Oil</button>
+                        <button class="tag-btn" data-query="Amul Butter">🧈 Amul Butter</button>
+                        <button class="tag-btn" data-query="Coca Cola">🥤 Coca Cola</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Results Section -->
+            <section id="resultsContainer" class="results-section hidden">
+                <!-- Toolbar & Query Summary -->
+                <div class="results-toolbar">
+                    <div class="query-summary">
+                        <h2>Results for "<span id="queryLabel"></span>"</h2>
+                        <span class="match-count" id="matchCountBadge">0 exact size groups</span>
+                    </div>
+                    <div class="view-controls">
+                        <div class="filter-group">
+                            <label for="sortSelect">Sort By:</label>
+                            <select id="sortSelect" class="custom-select">
+                                <option value="cheapest">Lowest Price First</option>
+                                <option value="savings">Highest Savings</option>
+                                <option value="size">Size / Quantity</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Exact Size Comparison Grid -->
+                <div id="exactMatchesContainer" class="comparison-grid"></div>
+
+                <!-- Unit Price Value Section -->
+                <div id="unitPriceSection" class="unit-price-section hidden">
+                    <div class="section-header">
+                        <h3>📊 Unit Price Analysis (Value per 100g / 100ml / item)</h3>
+                        <p>Calculated standard rate to help you spot hidden value across different pack sizes.</p>
+                    </div>
+                    <div id="unitPriceContainer" class="unit-price-grid"></div>
+                </div>
+            </section>
+
+            <!-- Loading Skeleton / Empty State -->
+            <div id="loadingState" class="loading-state hidden">
+                <div class="pulse-loader">
+                    <div class="pulse-circle"></div>
+                    <p class="loading-text">Fetching live prices from Blinkit, Zepto, and Instamart...</p>
+                </div>
+            </div>
+
+            <div id="emptyState" class="empty-state hidden">
+                <div class="empty-icon">🔍</div>
+                <h3>No Matching Products Found</h3>
+                <p>We couldn't find matches for "<span id="emptyQuery"></span>". Try another term like "Amul Milk" or "Fortune Oil".</p>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>⚡ <strong>PricePulse Engine</strong> — Comparing Quick Commerce across India in real-time.</p>
+        </footer>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
