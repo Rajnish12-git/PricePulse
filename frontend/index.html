@@ -1,142 +1,174 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PricePulse - Real-time Quick Commerce Price Comparison</title>
-    <meta name="description" content="Compare live grocery prices across Blinkit, Zepto, and Swiggy Instamart instantly. Find the best deals and unit price value.">
-    <!-- Google Fonts -->
+    <title>PricePulse — Compare Grocery & Quick-Commerce Prices</title>
+    <meta name="description" content="Compare live product prices across Blinkit, Zepto, and Instamart instantly.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:ital,opsz,wght@0,9..144,600;0,9..144,700;1,9..144,600&family=Plus+Jakarta+Sans:wght@700;800&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
     <div class="app-container">
-        <!-- Header / Navbar -->
         <header class="navbar">
             <div class="nav-brand">
-                <div class="logo-icon">⚡</div>
-                <div class="logo-text">
+                <div>
                     <span class="brand-name">PricePulse</span>
-                    <span class="brand-tag">Quick-Commerce Compare</span>
+                    <span class="brand-tag">Price Comparison</span>
                 </div>
             </div>
-            
-            <div class="platform-badges-header">
-                <span class="p-badge blinkit">
-                    <span class="dot"></span> Blinkit
-                </span>
-                <span class="p-badge zepto">
-                    <span class="dot"></span> Zepto
-                </span>
-                <span class="p-badge instamart">
-                    <span class="dot"></span> Instamart
-                </span>
-            </div>
-
-            <div class="api-status" id="apiStatus">
-                <span class="status-indicator live"></span>
-                <span class="status-text">Backend Connected</span>
+            <div class="platform-badges-header" aria-label="Platforms compared">
+                <span class="p-badge blinkit"><span class="dot"></span>Blinkit</span>
+                <span class="p-badge zepto"><span class="dot"></span>Zepto</span>
+                <span class="p-badge instamart"><span class="dot"></span>Instamart</span>
             </div>
         </header>
 
-        <!-- Main Hero Section -->
-        <main class="main-content">
+        <main>
             <section class="hero-section">
-                <h1 class="hero-title">Compare Live Prices across <span class="gradient-text">Blinkit, Zepto & Instamart</span></h1>
-                <p class="hero-subtitle">Stop overpaying for groceries. Get normalized package & unit price comparisons in real time.</p>
-
-                <!-- Search Form -->
+                <p class="eyebrow">QUICK-COMMERCE PRICE COMPARISON</p>
+                <h1 id="heroTitle" class="hero-title">
+                    <span class="hero-line"><span class="word-wrapper"><span class="hero-word">Compare</span></span>
+                        <span class="word-wrapper"><span class="hero-word">prices.</span></span></span>
+                    <span class="hero-line accent-line"><span class="word-wrapper"><span
+                                class="hero-word">Buy</span></span> <span class="word-wrapper"><span
+                                class="hero-word">smarter.</span></span></span>
+                </h1>
+                <p class="hero-subtitle">Find the exact item price across Blinkit, Zepto, and Instamart before you place
+                    your order.</p>
                 <div class="search-box-container">
                     <form id="searchForm" class="search-form">
                         <div class="search-input-wrapper">
-                            <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                                <circle cx="11" cy="11" r="8"></circle>
-                                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                            <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" aria-hidden="true">
+                                <circle cx="11" cy="11" r="7"></circle>
+                                <line x1="16.2" y1="16.2" x2="21" y2="21"></line>
                             </svg>
-                            <input 
-                                type="text" 
-                                id="searchInput" 
-                                class="search-input" 
-                                placeholder="Search products e.g., Amul Milk, Lays Chips, Fortune Oil..." 
-                                autocomplete="off"
-                                required
-                            >
-                            <button type="button" id="clearBtn" class="clear-btn hidden" aria-label="Clear search">✕</button>
+                            <input type="text" id="searchInput" class="search-input"
+                                placeholder="Search for a product or brand (e.g. Amul Butter)" autocomplete="off"
+                                required>
+                            <button type="button" id="clearBtn" class="clear-btn hidden"
+                                aria-label="Clear search">&times;</button>
                         </div>
                         <button type="submit" class="search-btn" id="searchBtn">
-                            <span class="btn-text">Search Deals</span>
+                            <span class="btn-text">Compare prices</span>
                             <span class="spinner hidden" id="searchSpinner"></span>
                         </button>
                     </form>
-
-                    <!-- Popular Quick Searches -->
                     <div class="quick-tags">
-                        <span class="quick-label">Try searching:</span>
-                        <button class="tag-btn" data-query="Amul Milk">🥛 Amul Milk</button>
-                        <button class="tag-btn" data-query="Lays Chips">🥔 Lays Chips</button>
-                        <button class="tag-btn" data-query="Fortune Oil">🪔 Fortune Oil</button>
-                        <button class="tag-btn" data-query="Amul Butter">🧈 Amul Butter</button>
-                        <button class="tag-btn" data-query="Coca Cola">🥤 Coca Cola</button>
+                        <span class="quick-label">Popular comparisons:</span>
+                        <button class="tag-btn" data-query="Amul Milk">Amul Milk</button>
+                        <button class="tag-btn" data-query="Lays Chips">Lays Chips</button>
+                        <button class="tag-btn" data-query="Fortune Oil">Fortune Oil</button>
+                        <button class="tag-btn" data-query="Amul Butter">Amul Butter</button>
                     </div>
                 </div>
             </section>
 
-            <!-- Results Section -->
             <section id="resultsContainer" class="results-section hidden">
-                <!-- Toolbar & Query Summary -->
                 <div class="results-toolbar">
                     <div class="query-summary">
-                        <h2>Results for "<span id="queryLabel"></span>"</h2>
+                        <p class="section-kicker">SEARCH RESULTS</p>
+                        <h2>Results for &ldquo;<span id="queryLabel"></span>&rdquo;</h2>
                         <span class="match-count" id="matchCountBadge">0 exact size groups</span>
                     </div>
-                    <div class="view-controls">
-                        <div class="filter-group">
-                            <label for="sortSelect">Sort By:</label>
-                            <select id="sortSelect" class="custom-select">
-                                <option value="cheapest">Lowest Price First</option>
-                                <option value="savings">Highest Savings</option>
-                                <option value="size">Size / Quantity</option>
-                            </select>
-                        </div>
+                    <div class="filter-group">
+                        <label for="sortSelect">Sort by</label>
+                        <select id="sortSelect" class="custom-select">
+                            <option value="cheapest">Lowest price</option>
+                            <option value="savings">Highest savings</option>
+                            <option value="size">Size / quantity</option>
+                        </select>
                     </div>
                 </div>
 
-                <!-- Exact Size Comparison Grid -->
+                <div class="section-intro">
+                    <div>
+                        <p class="section-kicker">LIKE FOR LIKE</p>
+                        <h3>Exact size comparison</h3>
+                    </div>
+                    <p>Direct comparisons between identical package sizes across stores.</p>
+                </div>
                 <div id="exactMatchesContainer" class="comparison-grid"></div>
+                <div id="exactMatchesMoreWrapper" class="show-more-wrapper hidden">
+                    <button type="button" id="exactMatchesMoreBtn" class="show-more-btn">Show more comparisons</button>
+                </div>
 
-                <!-- Unit Price Value Section -->
-                <div id="unitPriceSection" class="unit-price-section hidden">
-                    <div class="section-header">
-                        <h3>📊 Unit Price Analysis (Value per 100g / 100ml / item)</h3>
-                        <p>Calculated standard rate to help you spot hidden value across different pack sizes.</p>
+                <section id="unitPriceSection" class="unit-price-section hidden">
+                    <div class="section-intro">
+                        <div>
+                            <p class="section-kicker">VALUE CHECK</p>
+                            <h3>Unit price breakdown</h3>
+                        </div>
+                        <p>Standardized unit pricing to easily compare different pack sizes.</p>
                     </div>
                     <div id="unitPriceContainer" class="unit-price-grid"></div>
-                </div>
+                </section>
+
+                <section id="availabilitySection" class="availability-section hidden">
+                    <div class="section-intro">
+                        <div class="intro-header-row">
+                            <div>
+                                <p class="section-kicker">MORE PRODUCTS</p>
+                                <h3>Available on single store</h3>
+                            </div>
+                            <span class="match-count" id="singleStoreCountBadge">0 products</span>
+                        </div>
+                        <p>Items found on only one platform for this search query.</p>
+                    </div>
+                    <div id="availabilityContainer" class="availability-grid"></div>
+                    <div id="availabilityMoreWrapper" class="show-more-wrapper hidden">
+                        <button type="button" id="availabilityMoreBtn" class="show-more-btn">Show more products</button>
+                    </div>
+                </section>
             </section>
 
-            <!-- Loading Skeleton / Empty State -->
+            <div id="introState" class="intro-state">
+                <div class="intro-mark" aria-hidden="true">&#8377;</div>
+                <h3>Search a product to compare prices across stores</h3>
+                <p>Enter any item name above to instantly inspect live prices across Blinkit, Zepto, and Instamart.</p>
+            </div>
+
             <div id="loadingState" class="loading-state hidden">
-                <div class="pulse-loader">
+                <div class="loading-panel">
                     <div class="pulse-circle"></div>
-                    <p class="loading-text">Fetching live prices from Blinkit, Zepto, and Instamart...</p>
+                    <p class="section-kicker">FETCHING LIVE PRICES</p>
+                    <h3>Comparing prices across stores...</h3>
+                    <p class="loading-text">Gathering current product listings and calculating savings.</p>
+                    <div class="loading-platforms">
+                        <span><i class="loading-dot blinkit-dot"></i>Blinkit</span>
+                        <span><i class="loading-dot zepto-dot"></i>Zepto</span>
+                        <span><i class="loading-dot instamart-dot"></i>Instamart</span>
+                    </div>
                 </div>
             </div>
 
             <div id="emptyState" class="empty-state hidden">
-                <div class="empty-icon">🔍</div>
-                <h3>No Matching Products Found</h3>
-                <p>We couldn't find matches for "<span id="emptyQuery"></span>". Try another term like "Amul Milk" or "Fortune Oil".</p>
+                <div class="empty-icon" aria-hidden="true">&#128269;</div>
+                <h3>No comparable products found</h3>
+                <p>We couldn't find matching listings for &ldquo;<span id="emptyQuery"></span>&rdquo;. Try searching
+                    with a broader product or brand name.</p>
+            </div>
+
+            <div id="errorState" class="error-state hidden" role="alert">
+                <div class="empty-icon" aria-hidden="true">!</div>
+                <h3>Unable to load prices</h3>
+                <p id="errorMessage">Unable to compare prices right now. Please try again.</p>
+                <button type="button" id="retryBtn" class="secondary-btn">Try again</button>
             </div>
         </main>
 
-        <!-- Footer -->
         <footer class="footer">
-            <p>⚡ <strong>PricePulse Engine</strong> — Comparing Quick Commerce across India in real-time.</p>
+            <p><strong>PricePulse</strong> &mdash; Smart price comparison for Blinkit, Zepto, and Instamart.</p>
         </footer>
     </div>
-
     <script src="app.js"></script>
 </body>
+
 </html>

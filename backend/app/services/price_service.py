@@ -121,7 +121,7 @@ async def compare_prices_service(query: str) -> SearchResponse:
             continue
 
         size_label = format_size(size)
-        amount, unit = size
+        _, amount, unit, _ = size
 
         matches_list = [
             PlatformProductMatch(

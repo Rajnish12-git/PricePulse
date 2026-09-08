@@ -21,7 +21,7 @@ def get_instamart_products(product_name):
         "--query",
         product_name,
         "--address-id",
-        ADDRESS_ID,
+        ADDRESS_ID or "",
         "--json"
     ]
 
