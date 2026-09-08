@@ -1,5 +1,5 @@
 // PricePulse Web App - UI controller. API payloads and calculations stay server-owned.
-const API_BASE_URL = 'http://127.0.0.1:8000/api/v1';
+const API_BASE_URL = '/api/v1';
 
 const searchForm = document.getElementById('searchForm');
 const searchInput = document.getElementById('searchInput');
