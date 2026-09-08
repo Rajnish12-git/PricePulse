@@ -180,7 +180,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 async function checkApiHealth() {
     try {
-        await fetch('http://127.0.0.1:8000/health');
+        await fetch('/health');
     } catch {
         // Silently preserve backend API health check without UI indicator
     }
